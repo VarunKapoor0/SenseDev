@@ -23,6 +23,11 @@ import core.ai.AISettings
 import core.ai.ChatMessage
 import core.ai.MessageRole
 import kotlinx.coroutines.launch
+import ui.theme.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 
 @Composable
 fun AIPanel(
@@ -65,13 +70,15 @@ fun AIPanel(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF1E1E1E))
+            .background(PanelBackground)
     ) {
         // Header
         Surface(
-            color = Color(0xFF2D2D2D),
-            elevation = 4.dp,
+            color = PanelBackground,
+            elevation = 0.dp,
             modifier = Modifier.fillMaxWidth()
+                .border(width = 0.dp, color = Color.Transparent) // No border for header
+                .drawBehind { drawLine(BorderColor, Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx()) }
         ) {
             Row(
                 modifier = Modifier.padding(16.dp),
@@ -133,13 +140,13 @@ fun AIPanel(
 
         // Input Area
         Surface(
-            color = Color(0xFF2D2D2D),
-            elevation = 8.dp
+            color = PanelBackground,
+            elevation = 0.dp
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextField(
@@ -147,6 +154,7 @@ fun AIPanel(
                     onValueChange = { inputText = it },
                     modifier = Modifier
                         .weight(1f)
+                        .padding(end = 8.dp)
                         .onPreviewKeyEvent { event ->
                             if (event.type == KeyEventType.KeyDown && event.key == Key.Enter && !event.isShiftPressed) {
                                 if (inputText.isNotBlank()) {
@@ -157,21 +165,20 @@ fun AIPanel(
                             } else {
                                 false
                             }
-                        },
-                    placeholder = { Text("Ask a question...", color = Color.Gray) },
+                        }
+                        .border(1.dp, Color(0xFF2A2A2A), RoundedCornerShape(10.dp)),
+                    placeholder = { Text("Ask about this codebase...", color = Color(0xFF6F6F6F)) },
                     colors = TextFieldDefaults.textFieldColors(
-                        backgroundColor = Color(0xFF1E1E1E),
-                        textColor = Color.White,
-                        cursorColor = MaterialTheme.colors.primary,
+                        backgroundColor = Color(0xFF1F1F1F),
+                        textColor = TextPrimary,
+                        cursorColor = AccentPrimary,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
-                    shape = RoundedCornerShape(24.dp),
-                    singleLine = false, // Allow multi-line (Shift+Enter)
+                    shape = RoundedCornerShape(10.dp),
+                    singleLine = false, 
                     maxLines = 4
                 )
-                
-                Spacer(modifier = Modifier.width(8.dp))
                 
                 IconButton(
                     onClick = {
@@ -180,12 +187,15 @@ fun AIPanel(
                             inputText = ""
                         }
                     },
-                    enabled = inputText.isNotBlank()
+                    enabled = inputText.isNotBlank(),
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(if (inputText.isNotBlank()) AccentPrimary.copy(alpha=0.1f) else Color.Transparent, RoundedCornerShape(8.dp))
                 ) {
                     Icon(
                         Icons.Default.Send,
                         contentDescription = "Send",
-                        tint = if (inputText.isNotBlank()) MaterialTheme.colors.primary else Color.Gray
+                        tint = if (inputText.isNotBlank()) AccentPrimary else Color.Gray
                     )
                 }
             }
@@ -202,31 +212,31 @@ fun MessageBubble(message: ChatMessage) {
         horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
     ) {
         Surface(
-            color = if (isUser) MaterialTheme.colors.primary else Color(0xFF3E3E3E),
-            shape = RoundedCornerShape(
-                topStart = 16.dp,
-                topEnd = 16.dp,
-                bottomStart = if (isUser) 16.dp else 4.dp,
-                bottomEnd = if (isUser) 4.dp else 16.dp
-            ),
-            elevation = 2.dp
+            color = if (isUser) Color(0xFF2D2D2D) else Color(0xFF222222),
+            shape = RoundedCornerShape(8.dp),
+            elevation = 1.dp,
+            border = if (!isUser) BorderStroke(1.dp, Color(0xFF2C2C2C)) else null
         ) {
             Text(
                 text = message.content,
                 modifier = Modifier.padding(12.dp),
-                color = if (isUser) Color.Black else Color.White,
-                style = MaterialTheme.typography.body1
+                color = if (isUser) Color(0xFFE0E0E0) else Color(0xFFCCCCCC),
+                style = MaterialTheme.typography.body1.copy(
+                    lineHeight = 22.sp
+                )
             )
         }
         
         Spacer(modifier = Modifier.height(4.dp))
         
-        Text(
-            text = if (isUser) "You" else "AI",
-            style = MaterialTheme.typography.caption,
-            color = Color.Gray,
-            fontSize = 10.sp
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = if (isUser) "You" else "SenseDev AI",
+                style = MaterialTheme.typography.caption,
+                color = Color.Gray,
+                fontSize = 10.sp
+            )
+        }
     }
 }
 

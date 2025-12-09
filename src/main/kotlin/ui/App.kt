@@ -9,7 +9,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import ui.theme.*
 import controller.ProjectController
 import core.AnalysisResult
 import core.cache.AnalysisCache
@@ -33,14 +46,20 @@ fun App(appState: AppState, projectController: ProjectController) {
     var selectedNodeId by remember { mutableStateOf<String?>(null) }
     val analysisCache = remember { AnalysisCache() }
     val coroutineScope = rememberCoroutineScope()
+    
+    // UI State for Right Panel
+    var rightPanelTab by remember { mutableStateOf(0) } // 0 = Details, 1 = AI
+    var isAILoading by remember { mutableStateOf(false) }
 
     SenseDevTheme {
         Column(modifier = Modifier.fillMaxSize()) {
             // Menu Bar
             Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colors.surface,
-                elevation = 4.dp
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .zIndex(1f),
+                color = Color(0xFF1A1A1A),
+                elevation = 4.dp // Shadow
             ) {
                 ui.components.MenuBar(
                     onSaveAnalysis = {
@@ -63,8 +82,7 @@ fun App(appState: AppState, projectController: ProjectController) {
                     },
                     onExit = {
                         exitProcess(0)
-                    },
-                    enabled = appState.analysisResult != null
+                    }
                 )
             }
             
@@ -77,132 +95,129 @@ fun App(appState: AppState, projectController: ProjectController) {
                     modifier = Modifier
                         .width(sidebarWidth)
                         .fillMaxHeight()
-                        .background(MaterialTheme.colors.surface)
+                        .background(PanelBackground)
+                        .padding(vertical = 16.dp)
                 ) {
-                    var selectedTab by remember { mutableStateOf(0) }
-                    
-                    // Tab Row
-                    TabRow(
-                        selectedTabIndex = selectedTab,
-                        backgroundColor = MaterialTheme.colors.surface,
-                        contentColor = MaterialTheme.colors.primary
+                    // Open Project Button
+                    Button(
+                        onClick = { showFileDialog = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .height(40.dp),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF262626)),
+                        shape = RoundedCornerShape(8.dp),
+                        elevation = ButtonDefaults.elevation(0.dp, 2.dp)
                     ) {
-                        Tab(
-                            selected = selectedTab == 0,
-                            onClick = { selectedTab = 0 },
-                            text = { Text("Home", color = Color.White) }
-                        )
-                        Tab(
-                            selected = selectedTab == 1,
-                            onClick = { selectedTab = 1 },
-                            text = { Text("Files", color = Color.White) },
-                            enabled = appState.loadedProjectPath != null
-                        )
-                        Tab(
-                            selected = selectedTab == 2,
-                            onClick = { selectedTab = 2 },
-                            text = { Text("AI", color = Color.White) },
-                            enabled = appState.analysisResult != null
+                        Text(
+                            if (appState.loadedProjectPath != null) "Change Project" else "Open Project",
+                            color = AccentMuted,
+                            style = MaterialTheme.typography.button
                         )
                     }
 
-                    // Tab Content
-                    when (selectedTab) {
-                        0 -> {
-                            // Home Tab
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text("SenseDev", style = MaterialTheme.typography.h5, color = MaterialTheme.colors.primary)
-                                Spacer(modifier = Modifier.height(24.dp))
-
-                                Button(onClick = {
-                                    showFileDialog = true
-                                }) {
-                                    Text("Open Project")
-                                }
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                // Show loaded project path
-                                if (appState.loadedProjectPath != null) {
-                                    Column {
-                                        Text("Loaded:", style = MaterialTheme.typography.caption, color = Color.White)
-                                        Text(
-                                            File(appState.loadedProjectPath!!).name,
-                                            style = MaterialTheme.typography.body2,
-                                            color = MaterialTheme.colors.secondary
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(24.dp))
-
-                                Text("Views", style = MaterialTheme.typography.subtitle1, color = Color.White)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                
-                                ViewType.values().forEach { view ->
-                                    TextButton(
-                                        onClick = { appState.navigateTo(view) },
-                                        enabled = appState.loadedProjectPath != null,
-                                        colors = ButtonDefaults.textButtonColors(
-                                            contentColor = if (appState.currentView == view) {
-                                                MaterialTheme.colors.secondary
-                                            } else {
-                                                Color.White
-                                            }
-                                        )
-                                    ) {
-                                        Text(view.name)
-                                    }
-                                }
-                            }
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    // Sidebar Section: Project
+                    Text(
+                        "PROJECT", 
+                        style = MaterialTheme.typography.overline, 
+                        color = TextSecondary,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                    )
+                    
+                    // Custom Sidebar Item Composable
+                     @Composable
+                    fun SidebarItem(
+                        label: String, 
+                        icon: androidx.compose.ui.graphics.vector.ImageVector, 
+                        isSelected: Boolean, 
+                        onClick: () -> Unit
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(40.dp)
+                                .clickable(onClick = onClick)
+                                .background(if (isSelected) SurfaceHighlight else Color.Transparent)
+                                .padding(horizontal = 20.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = if (isSelected) AccentPrimary else TextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.body2.copy(fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium),
+                                color = if (isSelected) TextPrimary else TextSecondary
+                            )
                         }
-                        1 -> {
-                            // Folder Structure Tab
-                            if (appState.loadedProjectPath != null) {
-                                ui.components.FolderTreePanel(
-                                    rootPath = appState.loadedProjectPath!!,
-                                    onFileSelected = { file ->
-                                        println("Selected file: ${file.absolutePath}")
-                                    }
-                                )
-                            }
+                    }
+
+                    // View Navigation
+                    SidebarItem("Graph", Icons.Default.AccountTree, appState.currentView == ViewType.GRAPH) { appState.navigateTo(ViewType.GRAPH) }
+                    SidebarItem("Code", Icons.Default.Code, appState.currentView == ViewType.CODE) { appState.navigateTo(ViewType.CODE) }
+                    SidebarItem("Issues", Icons.Default.BugReport, appState.currentView == ViewType.ISSUES) { appState.navigateTo(ViewType.ISSUES) }
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Text(
+                        "EXPLORE", 
+                        style = MaterialTheme.typography.overline, 
+                        color = TextSecondary,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                    )
+                    
+                    // Toggle for Files/AI instead of tabs? Or keep them as views?
+                    // Let's integrate Files and AI as part of the view or separate panels?
+                    // The old code used tabs [Home, Files, AI].
+                    // Let's implement Files and AI as togglable panels or views in the main area?
+                    // For now, I'll keep the logic simple: Selecting "Files" shows the file tree in the sidebar? 
+                    // Or keep the old "Home/Files/AI" tab logic but styled better?
+                    // The prompt says "Sidebar specification... Section Labels GRAPH, CODE, ISSUES".
+                    // It seems the sidebar IS the navigation.
+                    // But where does the File Tree go? Usually file tree IS the sidebar.
+                    // Let's put File Tree in the sidebar below navigation if "Files" is active?
+                    // Or maybe "Files" is a view?
+                    
+                    // Let's assume for this redesign:
+                    // Sidebar has navigation. Content area shows Graph/Code/Issues.
+                    // But we need the File Tree somewhere.
+                    // Let's add a "Files" item. If selected, changing the sidebar content to file tree might be complex.
+                    // Strategy: Keep "File Tree" as a persistent section in Sidebar for now, or a toggle.
+                    // Let's just add "Files" and "AI Assistant" as items.
+                    
+                    var showFiles by remember { mutableStateOf(false) }
+                    SidebarItem("Project Files", Icons.Default.Folder, showFiles) { 
+                        showFiles = !showFiles
+                    }
+                    
+                    if (showFiles && appState.loadedProjectPath != null) {
+                        Box(modifier = Modifier.weight(1f)) {
+                             ui.components.FolderTreePanel(
+                                rootPath = appState.loadedProjectPath!!,
+                                selectedFile = appState.currentCodeFile?.let { File(it) },
+                                onFileSelected = { file ->
+                                    println("Selected file: ${file.absolutePath}")
+                                    // Also navigate to Code view
+                                    appState.openCode(file.absolutePath)
+                                }
+                            )
                         }
-                        2 -> {
-                            // AI Tab
-                            if (appState.analysisResult != null) {
-                                var isAILoading by remember { mutableStateOf(false) }
-                                
-                                ui.ai.AIPanel(
-                                    messages = appState.chatMessages,
-                                    isLoading = isAILoading,
-                                    onSendMessage = { query ->
-                                        // Add user message
-                                        appState.addChatMessage(
-                                            core.ai.ChatMessage(
-                                                role = core.ai.MessageRole.USER,
-                                                content = query
-                                            )
-                                        )
-                                        
-                                        // Launch AI processing
-                                        coroutineScope.launch {
-                                            isAILoading = true
-                                            try {
-                                                val context = core.ai.AIContext(
-                                                    selectedNodeId = selectedNodeId,
-                                                    graphData = appState.analysisResult?.graph,
-                                                    projectPath = appState.loadedProjectPath
-                                                )
-                                                val response = appState.aiEngine.processQuery(query, context)
-                                                appState.addChatMessage(response)
-                                            } finally {
-                                                isAILoading = false
-                                            }
-                                        }
-                                    }
-                                )
-                            }
-                        }
+                    }
+                    
+                    // If files not shown, spacer
+                    if (!showFiles) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    
+
+                     SidebarItem("AI Assistant", Icons.Default.AutoAwesome, rightPanelTab == 1) { 
+                        rightPanelTab = 1
                     }
                 }
                 
@@ -221,7 +236,7 @@ fun App(appState: AppState, projectController: ProjectController) {
                         .background(MaterialTheme.colors.background)
                         .padding(16.dp)
                 ) {
-                    // Show content if we have an analysis result OR a loaded project
+                    // Show content if we have analysis result OR a loaded project
                     if (appState.loadedProjectPath == null && appState.analysisResult == null) {
                         // Welcome Screen
                         Column(
@@ -335,104 +350,156 @@ fun App(appState: AppState, projectController: ProjectController) {
                     modifier = Modifier
                         .width(detailsWidth)
                         .fillMaxHeight()
-                        .background(MaterialTheme.colors.surface)
+                        .background(PanelBackground)
                         .padding(16.dp)
                 ) {
-                    Text(
-                        "Details",
-                        style = MaterialTheme.typography.h6,
-                        color = MaterialTheme.colors.primary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Divider(color = MaterialTheme.colors.onSurface.copy(alpha = 0.2f))
-                    Spacer(modifier = Modifier.height(16.dp))
+                    // Tab Bar
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .background(Color(0xFF1A1A1A))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clickable { rightPanelTab = 0 }
+                                .background(if (rightPanelTab == 0) Color(0xFF262626) else Color.Transparent),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("DETAILS", color = if (rightPanelTab == 0) TextPrimary else TextSecondary, style = MaterialTheme.typography.button)
+                            if (rightPanelTab == 0) Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(2.dp).background(AccentPrimary))
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clickable { rightPanelTab = 1 }
+                                .background(if (rightPanelTab == 1) Color(0xFF262626) else Color.Transparent),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("AI", color = if (rightPanelTab == 1) TextPrimary else TextSecondary, style = MaterialTheme.typography.button)
+                            if (rightPanelTab == 1) Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(2.dp).background(AccentPrimary))
+                        }
+                    }
                     
-                    // Show details if we have analysis result
-                    if (appState.analysisResult != null) {
+                    Divider(color = DividerColor)
+                    
+                    Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                        if (rightPanelTab == 0) {
+                             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
+                                 Spacer(modifier = Modifier.height(8.dp))
+                                 
+                                // Show details if we have analysis result
+                                if (appState.analysisResult != null) {
                         val result = appState.analysisResult
                         if (result != null && result.graph != null && selectedNodeId != null) {
                             // Find selected node
                             val selectedNode = result.graph.nodes.find { it.id == selectedNodeId }
                             if (selectedNode != null) {
-                                // Node details
-                                Text(
-                                    selectedNode.name,
-                                    style = MaterialTheme.typography.h6,
-                                    color = MaterialTheme.colors.primary
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    "Type: ${selectedNode.type.name}",
-                                    style = MaterialTheme.typography.body2,
-                                    color = Color.White
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                
-                                // View Source Button
-                                Button(
-                                    onClick = {
-                                        appState.openCode(selectedNode.filePath)
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary)
-                                ) {
-                                    Text("View Source")
-                                }
-                                Spacer(modifier = Modifier.height(16.dp))
-                                
-                                if (selectedNode.sensorTypes.isNotEmpty()) {
                                     Text(
-                                        "Sensors:",
-                                        style = MaterialTheme.typography.subtitle2,
-                                        color = MaterialTheme.colors.primary
+                                        "DETAILS",
+                                        style = MaterialTheme.typography.overline,
+                                        color = TextSecondary,
+                                        modifier = Modifier.padding(bottom = 8.dp)
                                     )
-                                    selectedNode.sensorTypes.forEach { sensorType ->
-                                        Text(
-                                            "• ${sensorType.name}",
-                                            style = MaterialTheme.typography.body2,
-                                            color = Color.White
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                }
-                                
-                                // Incoming edges
-                                val incomingEdges = result.graph.edges.filter { it.to == selectedNodeId }
-                                if (incomingEdges.isNotEmpty()) {
+                                    
+                                    // Title
                                     Text(
-                                        "Incoming (${incomingEdges.size}):",
-                                        style = MaterialTheme.typography.subtitle2,
-                                        color = MaterialTheme.colors.primary
+                                        selectedNode.name,
+                                        style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
+                                        color = TextPrimary
                                     )
-                                    incomingEdges.take(5).forEach { edge ->
-                                        val fromNode = result.graph.nodes.find { it.id == edge.from }
-                                        Text(
-                                            "← ${fromNode?.name ?: "Unknown"} (${edge.type.name})",
-                                            style = MaterialTheme.typography.caption,
-                                            color = Color(0xFFBB86FC)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                }
-                                
-                                // Outgoing edges
-                                val outgoingEdges = result.graph.edges.filter { it.from == selectedNodeId }
-                                if (outgoingEdges.isNotEmpty()) {
-                                    Text(
-                                        "Outgoing (${outgoingEdges.size}):",
-                                        style = MaterialTheme.typography.subtitle2,
-                                        color = MaterialTheme.colors.primary
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    
+                                    // Accent Underline
+                                    Box(
+                                        modifier = Modifier
+                                            .width(40.dp)
+                                            .height(2.dp)
+                                            .background(AccentPrimary)
                                     )
-                                    outgoingEdges.take(5).forEach { edge ->
-                                        val toNode = result.graph.nodes.find { it.id == edge.to }
-                                        Text(
-                                            "→ ${toNode?.name ?: "Unknown"} (${edge.type.name})",
-                                            style = MaterialTheme.typography.caption,
-                                            color = Color(0xFF03DAC6)
-                                        )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    
+                                    // Metadata Badges
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        // Type Badge
+                                        Surface(
+                                            color = SurfaceHighlight,
+                                            shape = RoundedCornerShape(12.dp),
+                                            border = BorderStroke(1.dp, BorderColor)
+                                        ) {
+                                            Text(
+                                                selectedNode.type.name,
+                                                style = MaterialTheme.typography.caption.copy(fontWeight = FontWeight.Bold),
+                                                color = ui.theme.AccentMuted,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            )
+                                        }
                                     }
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                }
+                                    
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    
+                                    // View Source Button
+                                    Button(
+                                        onClick = {
+                                            appState.openCode(selectedNode.filePath)
+                                        },
+                                        modifier = Modifier.fillMaxWidth().height(36.dp),
+                                        colors = ButtonDefaults.buttonColors(backgroundColor = AccentMuted.copy(alpha = 0.2f)),
+                                        elevation = ButtonDefaults.elevation(0.dp, 0.dp),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text("View Source", color = AccentPrimary)
+                                    }
+                                    Spacer(modifier = Modifier.height(24.dp))
+                                    
+                                    // Sections
+                                    if (selectedNode.sensorTypes.isNotEmpty()) {
+                                        Text("SENSORS", style = MaterialTheme.typography.overline, color = TextSecondary)
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        selectedNode.sensorTypes.forEach { sensorType ->
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(Icons.Default.Sensors, contentDescription = null, tint = AccentMuted, modifier = Modifier.size(14.dp))
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(sensorType.name, style = MaterialTheme.typography.body2, color = TextPrimary)
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                    }
+                                    
+                                    // Incoming edges
+                                    val incomingEdges = result.graph.edges.filter { it.to == selectedNodeId }
+                                    if (incomingEdges.isNotEmpty()) {
+                                        Text("INCOMING (${incomingEdges.size})", style = MaterialTheme.typography.overline, color = TextSecondary)
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        incomingEdges.take(10).forEach { edge ->
+                                            val fromNode = result.graph.nodes.find { it.id == edge.from }
+                                            Row(modifier = Modifier.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                 Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color(0xFFE57373), modifier = Modifier.size(12.dp))
+                                                 Spacer(modifier = Modifier.width(8.dp))
+                                                 Text(fromNode?.name ?: "Unknown", style = MaterialTheme.typography.body2, color = TextPrimary)
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                    }
+                                    
+                                    // Outgoing edges
+                                    val outgoingEdges = result.graph.edges.filter { it.from == selectedNodeId }
+                                    if (outgoingEdges.isNotEmpty()) {
+                                        Text("OUTGOING (${outgoingEdges.size})", style = MaterialTheme.typography.overline, color = TextSecondary)
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        outgoingEdges.take(10).forEach { edge ->
+                                            val toNode = result.graph.nodes.find { it.id == edge.to }
+                                            Row(modifier = Modifier.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                 Icon(Icons.Default.ArrowForward, contentDescription = null, tint = AccentPrimary, modifier = Modifier.size(12.dp))
+                                                 Spacer(modifier = Modifier.width(8.dp))
+                                                 Text(toNode?.name ?: "Unknown", style = MaterialTheme.typography.body2, color = TextPrimary)
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
                                 
                                 // Flows through this node
                                 val flowsThroughNode = result.flows.filter { flow ->
@@ -484,8 +551,39 @@ fun App(appState: AppState, projectController: ProjectController) {
                                 color = Color.White
                             )
                         }
-                    }
-                }
+                                    } // End if analysisResult
+                             } // End Scrollable Column
+                        } else {
+                            // AI Panel
+                           ui.ai.AIPanel(
+                                messages = appState.chatMessages,
+                                isLoading = isAILoading,
+                                onSendMessage = { query ->
+                                    appState.addChatMessage(
+                                        core.ai.ChatMessage(
+                                            role = core.ai.MessageRole.USER,
+                                            content = query
+                                        )
+                                    )
+                                    coroutineScope.launch {
+                                        isAILoading = true
+                                        try {
+                                            val context = core.ai.AIContext(
+                                                selectedNodeId = selectedNodeId,
+                                                graphData = appState.analysisResult?.graph,
+                                                projectPath = appState.loadedProjectPath
+                                            )
+                                            val response = appState.aiEngine.processQuery(query, context)
+                                            appState.addChatMessage(response)
+                                        } finally {
+                                            isAILoading = false
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    } // End Box content
+                } // End Right Panel Column
             }
         }
     }
@@ -650,7 +748,7 @@ fun VerticalSplitter(
             modifier = Modifier
                 .width(1.dp)
                 .fillMaxHeight()
-                .background(Color(0xFF3E3E3E))
+                .background(ui.theme.DividerColor)
                 .align(Alignment.Center)
         )
     }

@@ -1,0 +1,15 @@
+> Task :checkKotlinGradlePluginConfigurationErrors
+
+> Task :compileKotlin
+w: file:///D:/Varun/Github/SenseDev/src/main/kotlin/ui/App.kt:516:25 Name shadowed: analysisCache
+w: file:///D:/Varun/Github/SenseDev/src/main/kotlin/ui/App.kt:516:25 Variable 'analysisCache' is never used
+w: file:///D:/Varun/Github/SenseDev/src/main/kotlin/ui/ai/AIPanel.kt:40:9 Variable 'coroutineScope' is never used
+w: file:///D:/Varun/Github/SenseDev/src/main/kotlin/ui/components/FolderTreePanel.kt:97:17 Variable 'iconColor' is never used
+w: file:///D:/Varun/Github/SenseDev/src/main/kotlin/ui/graph/GraphPanel.kt:53:9 Variable 'isDragging' is never used
+w: file:///D:/Varun/Github/SenseDev/src/main/kotlin/ui/graph/GraphPanel.kt:133:37 Variable 'edgeColor' initializer is redundant
+w: file:///D:/Varun/Github/SenseDev/src/main/kotlin/ui/graph/GraphPanel.kt:158:25 Variable 'dy' is never used
+w: file:///D:/Varun/Github/SenseDev/src/main/kotlin/ui/graph/GraphPanel.kt:162:25 Variable 'cp1' is never used
+w: file:///D:/Varun/Github/SenseDev/src/main/kotlin/ui/graph/GraphPanel.kt:163:25 Variable 'cp2' is never used
+
+BUILD SUCCESSFUL in 14s
+2 actionable tasks: 2 executed

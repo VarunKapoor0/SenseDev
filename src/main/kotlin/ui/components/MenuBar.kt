@@ -1,12 +1,18 @@
 package ui.components
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import core.ai.AISettings
+import ui.theme.*
 
 @Composable
 fun MenuBar(
@@ -17,16 +23,29 @@ fun MenuBar(
     onExit: () -> Unit,
     enabled: Boolean = true
 ) {
-    Row {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .background(Color(0xFF1A1A1A)) // Toolbar background
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // App Icon/Name?
+        // Text("SenseDev", style = MaterialTheme.typography.subtitle1, color = Color.White, modifier = Modifier.padding(end = 16.dp))
+
         // File Menu
         var fileMenuExpanded by remember { mutableStateOf(false) }
         Box {
             TextButton(onClick = { fileMenuExpanded = true }) {
-                Text("File", color = Color.White)
+                Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(16.dp), tint = TextSecondary)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("File", color = TextPrimary)
             }
             DropdownMenu(
                 expanded = fileMenuExpanded,
-                onDismissRequest = { fileMenuExpanded = false }
+                onDismissRequest = { fileMenuExpanded = false },
+                modifier = Modifier.background(PanelBackground)
             ) {
                 DropdownMenuItem(
                     onClick = {
@@ -35,7 +54,7 @@ fun MenuBar(
                     },
                     enabled = enabled
                 ) {
-                    Text("Save Analysis")
+                    Text("Save Analysis", color = TextPrimary)
                 }
                 DropdownMenuItem(
                     onClick = {
@@ -44,7 +63,7 @@ fun MenuBar(
                     },
                     enabled = enabled
                 ) {
-                    Text("Save Analysis As...")
+                    Text("Save Analysis As...", color = TextPrimary)
                 }
                 DropdownMenuItem(
                     onClick = {
@@ -52,48 +71,16 @@ fun MenuBar(
                         fileMenuExpanded = false
                     }
                 ) {
-                    Text("Load Analysis")
+                    Text("Load Analysis", color = TextPrimary)
                 }
-                Divider()
+                Divider(color = DividerColor)
                 DropdownMenuItem(
                     onClick = {
                         onExit()
                         fileMenuExpanded = false
                     }
                 ) {
-                    Text("Exit")
-                }
-            }
-        }
-
-        // Connections Menu
-        var connectionsMenuExpanded by remember { mutableStateOf(false) }
-        Box {
-            TextButton(onClick = { connectionsMenuExpanded = true }) {
-                Text("Connections", color = Color.White)
-            }
-            DropdownMenu(
-                expanded = connectionsMenuExpanded,
-                onDismissRequest = { connectionsMenuExpanded = false }
-            ) {
-                DropdownMenuItem(onClick = { connectionsMenuExpanded = false }, enabled = false) {
-                    Text("(Coming soon)")
-                }
-            }
-        }
-
-        // View Menu
-        var viewMenuExpanded by remember { mutableStateOf(false) }
-        Box {
-            TextButton(onClick = { viewMenuExpanded = true }) {
-                Text("View", color = Color.White)
-            }
-            DropdownMenu(
-                expanded = viewMenuExpanded,
-                onDismissRequest = { viewMenuExpanded = false }
-            ) {
-                DropdownMenuItem(onClick = { viewMenuExpanded = false }, enabled = false) {
-                    Text("(Coming soon)")
+                    Text("Exit", color = TextPrimary)
                 }
             }
         }
@@ -102,11 +89,14 @@ fun MenuBar(
         var editMenuExpanded by remember { mutableStateOf(false) }
         Box {
             TextButton(onClick = { editMenuExpanded = true }) {
-                Text("Edit", color = Color.White)
+                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp), tint = TextSecondary)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Edit", color = TextPrimary)
             }
             DropdownMenu(
                 expanded = editMenuExpanded,
-                onDismissRequest = { editMenuExpanded = false }
+                onDismissRequest = { editMenuExpanded = false },
+                modifier = Modifier.background(PanelBackground)
             ) {
                 DropdownMenuItem(
                     onClick = {
@@ -114,27 +104,71 @@ fun MenuBar(
                         editMenuExpanded = false
                     }
                 ) {
-                    Text("Settings")
+                    Text("Settings", color = TextPrimary)
                 }
             }
         }
 
+        // View Menu
+        var viewMenuExpanded by remember { mutableStateOf(false) }
+        Box {
+            TextButton(onClick = { viewMenuExpanded = true }) {
+                Icon(Icons.Default.ViewQuilt, contentDescription = null, modifier = Modifier.size(16.dp), tint = TextSecondary)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("View", color = TextPrimary)
+            }
+            DropdownMenu(
+                expanded = viewMenuExpanded,
+                onDismissRequest = { viewMenuExpanded = false },
+                modifier = Modifier.background(PanelBackground)
+            ) {
+                DropdownMenuItem(onClick = { viewMenuExpanded = false }, enabled = false) {
+                    Text("(Coming soon)", color = TextDisabled)
+                }
+            }
+        }
+        
         // Help Menu
         var helpMenuExpanded by remember { mutableStateOf(false) }
         Box {
             TextButton(onClick = { helpMenuExpanded = true }) {
-                Text("Help", color = Color.White)
+                Icon(Icons.Default.HelpOutline, contentDescription = null, modifier = Modifier.size(16.dp), tint = TextSecondary)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Help", color = TextPrimary)
             }
             DropdownMenu(
                 expanded = helpMenuExpanded,
-                onDismissRequest = { helpMenuExpanded = false }
+                onDismissRequest = { helpMenuExpanded = false },
+                modifier = Modifier.background(PanelBackground)
             ) {
                 DropdownMenuItem(onClick = { helpMenuExpanded = false }) {
-                    Text("About SenseDev")
+                    Text("About SenseDev", color = TextPrimary)
                 }
                 DropdownMenuItem(onClick = { helpMenuExpanded = false }) {
-                    Text("Documentation")
+                    Text("Documentation", color = TextPrimary)
                 }
+            }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Model Indicator
+        Surface(
+            color = Color(0xFF252525),
+            shape = RoundedCornerShape(12.dp),
+            contentColor = AccentMuted,
+            modifier = Modifier.padding(end = 8.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(12.dp), tint = AccentMuted)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = AISettings.selectedModel.ifBlank { "Local" },
+                    style = MaterialTheme.typography.caption
+                )
             }
         }
     }
