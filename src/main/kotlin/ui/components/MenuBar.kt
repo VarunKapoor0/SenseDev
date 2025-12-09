@@ -21,6 +21,7 @@ fun MenuBar(
     onLoadAnalysis: () -> Unit,
     onSettings: () -> Unit,
     onExit: () -> Unit,
+    settingsVersion: Int = 0,
     enabled: Boolean = true
 ) {
     Row(
@@ -159,6 +160,10 @@ fun MenuBar(
             contentColor = AccentMuted,
             modifier = Modifier.padding(end = 8.dp)
         ) {
+            val selectedModelName by remember(settingsVersion) { 
+                mutableStateOf(AISettings.selectedModel.ifBlank { "Local" }) 
+            }
+            
             Row(
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -166,7 +171,7 @@ fun MenuBar(
                 Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(12.dp), tint = AccentMuted)
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = AISettings.selectedModel.ifBlank { "Local" },
+                    text = selectedModelName,
                     style = MaterialTheme.typography.caption
                 )
             }

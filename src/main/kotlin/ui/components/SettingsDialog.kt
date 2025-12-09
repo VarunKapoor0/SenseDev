@@ -21,7 +21,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsDialog(
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onSettingsChanged: () -> Unit
 ) {
     var geminiKey by remember { mutableStateOf(AISettings.geminiApiKey) }
     var openaiKey by remember { mutableStateOf(AISettings.openaiApiKey) }
@@ -434,6 +435,8 @@ fun SettingsDialog(
                         }
                         AISettings.codeAccessLevel = codeAccessLevel
                         AISettings.maxCodeTokens = maxTokens.toIntOrNull() ?: 2000
+                        AISettings.saveSettings()
+                        onSettingsChanged()
                         onDismiss()
                     }) {
                         Text("Save")

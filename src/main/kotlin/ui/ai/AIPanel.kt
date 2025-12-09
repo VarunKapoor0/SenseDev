@@ -34,16 +34,17 @@ fun AIPanel(
     messages: List<ChatMessage>,
     onSendMessage: (String) -> Unit,
     isLoading: Boolean = false,
+    settingsVersion: Int = 0,
     modifier: Modifier = Modifier
 ) {
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     
-    // Get current provider status
-    val providerType = remember { mutableStateOf(AISettings.selectedProvider) }
-    val modelName = remember { mutableStateOf(AISettings.selectedModel) }
-    val accessLevel = remember { mutableStateOf(AISettings.codeAccessLevel) }
+    // Get current provider status (Updates when settingsVersion changes)
+    val providerType = remember(settingsVersion) { mutableStateOf(AISettings.selectedProvider) }
+    val modelName = remember(settingsVersion) { mutableStateOf(AISettings.selectedModel) }
+    val accessLevel = remember(settingsVersion) { mutableStateOf(AISettings.codeAccessLevel) }
     
     val providerText = when (providerType.value) {
         AIProviderType.LOCAL -> "Basic (Local)"

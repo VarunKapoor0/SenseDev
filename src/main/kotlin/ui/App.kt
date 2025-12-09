@@ -48,8 +48,10 @@ fun App(appState: AppState, projectController: ProjectController) {
     val coroutineScope = rememberCoroutineScope()
     
     // UI State for Right Panel
+    // UI State for Right Panel
     var rightPanelTab by remember { mutableStateOf(0) } // 0 = Details, 1 = AI
     var isAILoading by remember { mutableStateOf(false) }
+    var aiSettingsVersion by remember { mutableStateOf(0) }
 
     SenseDevTheme {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -82,7 +84,8 @@ fun App(appState: AppState, projectController: ProjectController) {
                     },
                     onExit = {
                         exitProcess(0)
-                    }
+                    },
+                    settingsVersion = aiSettingsVersion
                 )
             }
             
@@ -558,6 +561,7 @@ fun App(appState: AppState, projectController: ProjectController) {
                            ui.ai.AIPanel(
                                 messages = appState.chatMessages,
                                 isLoading = isAILoading,
+                                settingsVersion = aiSettingsVersion,
                                 onSendMessage = { query ->
                                     appState.addChatMessage(
                                         core.ai.ChatMessage(
@@ -668,6 +672,9 @@ fun App(appState: AppState, projectController: ProjectController) {
         ui.components.SettingsDialog(
             onDismiss = {
                 showSettingsDialog = false
+            },
+            onSettingsChanged = {
+                aiSettingsVersion++
             }
         )
     }
