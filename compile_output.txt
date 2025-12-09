@@ -1,0 +1,92 @@
+﻿> Task :checkKotlinGradlePluginConfigurationErrors
+
+> Task :compileKotlin
+.\gradlew.bat : e: file:///D:/V
+arun/Github/SenseDev/src/main/k
+otlin/ui/App.kt:381:9 
+Unresolved reference: 
+SaveFileDialog
+At line:1 char:1
++ .\gradlew.bat compileKotlin 
+2>&1 | Out-File -FilePath 
+compile_output. ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~
+    + CategoryInfo          :  
+   NotSpecified: (e: file:///  
+  D:/V... SaveFileDialog:Str   
+ ing) [], RemoteException
+    + FullyQualifiedErrorId :  
+   NativeCommandError
+ 
+e: file:///D:/Varun/Github/Sens
+eDev/src/main/kotlin/ui/App.kt:
+382:32 Cannot infer a type for 
+this parameter. Please specify 
+it explicitly.
+e: file:///D:/Varun/Github/Sens
+eDev/src/main/kotlin/ui/App.kt:
+392:62 Type mismatch: inferred 
+type is AnalysisResult but Seri
+alizationStrategy<TypeVariable(
+T)> was expected
+e: file:///D:/Varun/Github/Sens
+eDev/src/main/kotlin/ui/App.kt:
+392:62 No value passed for 
+parameter 'value'
+e: file:///D:/Varun/Github/Sens
+eDev/src/main/kotlin/ui/App.kt:
+393:33 Overload resolution 
+ambiguity: 
+public constructor File(p0: 
+URI!) defined in java.io.File
+public constructor File(p0: 
+String!) defined in 
+java.io.File
+e: file:///D:/Varun/Github/Sens
+eDev/src/main/kotlin/ui/App.kt:
+409:9 Unresolved reference: 
+LoadFileDialog
+e: file:///D:/Varun/Github/Sens
+eDev/src/main/kotlin/ui/App.kt:
+410:32 Cannot infer a type for 
+this parameter. Please specify 
+it explicitly.
+e: file:///D:/Varun/Github/Sens
+eDev/src/main/kotlin/ui/App.kt:
+413:46 Overload resolution 
+ambiguity: 
+public constructor File(p0: 
+URI!) defined in java.io.File
+public constructor File(p0: 
+String!) defined in 
+java.io.File
+
+> Task :compileKotlin FAILED
+
+FAILURE: Build failed with an 
+exception.
+
+* What went wrong:
+Execution failed for task 
+':compileKotlin'.
+> A failure occurred while 
+executing org.jetbrains.kotlin.
+compilerRunner.GradleCompilerRu
+nnerWithWorkers$GradleKotlinCom
+pilerWorkAction
+   > Compilation error. See 
+log for more details
+
+* Try:
+> Run with --stacktrace option 
+to get the stack trace.
+> Run with --info or --debug 
+option to get more log output.
+> Run with --scan to get full 
+insights.
+> Get more help at 
+https://help.gradle.org.
+
+BUILD FAILED in 5s
+2 actionable tasks: 2 executed

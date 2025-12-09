@@ -1,0 +1,426 @@
+SenseDev AI Architecture Document (Standalone)
+
+Format: Hybrid (formal + engineering oriented)
+Prompt detail: High-level
+
+📘 SenseDev AI Architecture Specification
+
+Version 1.0 — High-Level, Hybrid Formal/Engineering Design
+This document defines the complete AI system inside SenseDev.
+
+1. Purpose of the AI System
+
+SenseDev’s AI exists to help developers understand their codebase, not to generate or modify it.
+
+The AI has two tiers:
+
+Tier 1 — Local “Basic AI” (Built-In, Required)
+
+A deterministic, offline, rule-based assistant that:
+
+Answers questions using only static analysis results
+
+Provides concise, accurate explanations
+
+Never hallucinates
+
+Works even when the user has no internet or API keys
+
+Tier 2 — External “Advanced AI” (Optional, Connected Providers)
+
+An optional enhanced conversational layer using:
+
+Gemini (via OAuth)
+
+OpenAI (via API key)
+
+Future providers
+
+This layer:
+
+Provides deeper reasoning
+
+Explains flows fluently
+
+Offers architecture insights
+
+Synthesizes complex explanations
+
+Both tiers operate inside the Q&A panel on the right side of the UI.
+
+2. Architectural Overview
+                       ┌──────────────────────────────────┐
+                       │            Q&A UI Panel           │
+                       └─────────────┬─────────────────────┘
+                                     │
+                             User Question
+                                     ▼
+                 ┌────────────────────────────────────────────┐
+                 │          AI Query Orchestration Layer       │
+                 └───────┬─────────────────────┬──────────────┘
+                         │                     │
+                 Tier 1 (Local)         Tier 2 (Connected)
+                         │                     │
+                         ▼                     ▼
+          ┌──────────────────────┐   ┌──────────────────────────┐
+          │ Local Explanation    │   │ External LLM Provider(s) │
+          │ Engine (Rule-based) │   │   Gemini / OpenAI / etc. │
+          └─────────┬────────────┘   └──────────┬──────────────┘
+                    │                            │
+                    ▼                            ▼
+        ┌─────────────────────┐      ┌─────────────────────────────┐
+        │ Static Analysis Data │      │ Prompt Builder + Context    │
+        │ Graph, Nodes, Edges │      │ Snippet Selector             │
+        └─────────────────────┘      └─────────────────────────────┘
+
+3. Modes of Operation
+3.1 Offline Mode (Tier 1 Only)
+
+AI = rule-based explainer
+
+Answers grounded in:
+
+Node attributes
+
+Edges + edge types
+
+Flows
+
+Issue detector output
+
+No external API calls.
+
+3.2 Online Mode (Tier 1 + Tier 2)
+
+Tier 1 always available
+
+Tier 2 enhances responses for:
+
+Natural explanations
+
+Architectural reasoning
+
+Summaries involving many nodes
+
+Contextual dev-to-dev conversation
+
+The user chooses:
+
+Use external AI (ON/OFF toggle)
+
+Provider (Gemini / OpenAI)
+
+4. Tier 1: Local Explanation Engine (Rule-Based)
+4.1 Core Responsibilities
+
+Tier 1 answers:
+
+“Why are node A and B connected?”
+
+“What does this class do?”
+
+“Show the flow from this sensor source.”
+
+“Where is this listener registered/unregistered?”
+
+“Which state variables does this method write?”
+
+4.2 Input Data
+
+Tier 1 only uses the internal static analysis results:
+
+Graph (nodes + edges + types)
+
+Role classifications
+
+Flows
+
+Issue list
+
+Node metadata (thread hints, lifecycle links)
+
+Source snippets (line numbers + extracted code)
+
+4.3 Output Style
+
+Concise
+
+Technical
+
+No speculation
+
+No suggestions unless based on rules
+
+4.4 Response Templates
+
+High-level example templates:
+
+Node Explanation Template
+
+[NodeName] is a [ROLE]. It is referenced by [X] and calls [Y].
+It participates in the following sensor flows: [...]
+
+
+Connection Explanation Template
+
+Node A is connected to Node B because:
+- Edge type: [CALLS / WRITES_STATE / READS_STATE / LIFECYCLE_LINK]
+- Location: File.kt:42
+Summary: A → B through method [foo()].
+
+
+Flow Explanation Template
+
+Sensor flow for [SENSOR_TYPE]:
+Source → [Node1] → [Node2] → UI
+
+5. Tier 2: External Advanced AI (LLM Providers)
+5.1 Supported Providers
+
+Gemini 2.0+ (OAuth-based sign-in)
+
+OpenAI GPT-4+, GPT-5, etc. (API key entry)
+
+Future providers extendable via plugin-like model
+
+5.2 Responsibilities
+
+Tier 2 answers:
+
+“Explain this architecture.”
+
+“Is this design safe or risky?”
+
+“How does this repository work conceptually?”
+
+“Rewrite this explanation in simpler terms.”
+
+“Compare these two flows.”
+
+5.3 Tier 2 Always Requires:
+
+User opt-in
+
+Explicit connection
+
+API token tied to user account
+
+6. Provider-Agnostic Prompt Building (High-Level)
+6.1 Key Principles
+
+Always grounded in static analysis facts
+
+Never send entire repo
+
+Use minimal, curated context
+
+Always include:
+
+Question
+
+Node/edge summaries
+
+Flows (if relevant)
+
+Issues (if relevant)
+
+Code snippets (if user toggled ON)
+
+6.2 High-Level Prompt Template (Abstract)
+You are an AI assistant integrated into a static analysis tool called SenseDev.
+
+Facts about the codebase (do not invent anything):
+[NODE_SUMMARIES]
+[EDGE_SUMMARIES]
+[FLOWS]
+[ISSUES]
+[SELECTED_CODE_SNIPPETS]
+
+User Question:
+[QUESTION]
+
+Instructions:
+- Only answer using the provided facts.
+- If something is unknown, say "This cannot be determined from static analysis."
+- Be concise, technical, and helpful.
+
+6.3 Safety / Hallucination Guard
+
+The instructions always tell the model:
+
+No guessing
+
+No imaginary files or variables
+
+No assumptions about runtime
+
+No architecture claims unsupported by facts
+
+7. Context Selection Algorithm
+7.1 Based on Selection
+
+User selects:
+
+A node
+
+Or file
+
+Or flow
+
+Context includes:
+
+Related nodes (parents, children)
+
+Edge types
+
+Flow segments (upstream/downstream)
+
+Associated issues
+
+Code snippets for relevant methods
+
+7.2 Context Trimming
+
+Limit:
+
+Max nodes: 12
+
+Max edges: 20
+
+Max code lines: 50
+
+Tier 2 LLM must not be overloaded.
+
+8. AI Query Pipeline (Detailed)
+Step 1 — User Question Received
+
+Q&A pane triggers request.
+
+Step 2 — Context Assembler
+
+Collects:
+
+Selected node / file
+
+Incoming/outgoing edges
+
+Flow membership
+
+Issues
+
+Node metadata
+
+Selected code snippets (if allowed)
+
+Step 3 — Decide Tier
+
+If offline OR no provider connected → Tier 1 only
+
+Else → Tier 2 with fallback to Tier 1
+
+Step 4 — Build Prompt
+
+Based on tier:
+
+Tier 1: local rule template
+
+Tier 2: full LLM prompt
+
+Step 5 — Run Provider
+
+Tier 1: internal engine
+
+Tier 2: external API
+
+Step 6 — Finalize Response
+
+Format answer
+
+Convert references into UI links
+
+Apply technical tone
+
+Step 7 — Present in Chat
+
+Append to chat history
+
+Keep context short-lived (no long threads)
+
+9. Failure Modes & Behaviors
+Failure	Behavior
+No provider	Use Tier 1
+Provider error	Fallback to Tier 1
+Context too large	Trim nodes/edges/snippets
+Insufficient facts	AI must say so
+Unsafe prompt	Block snippet sending
+10. UI/UX Rules for AI Panel
+10.1 Behavior
+
+Always visible on the right
+
+Quick question box
+
+Auto-scroll to latest answer
+
+Model status indicator:
+
+“Basic AI”
+
+“Gemini Connected”
+
+“OpenAI Connected”
+
+10.2 Links in answers
+
+Clicking a file → open in code panel
+
+Clicking a node → highlight in graph
+
+Clicking a flow → open flow view
+
+10.3 Transparency
+
+The user always knows:
+
+Which tier answered
+
+Which provider (if any)
+
+Which code snippets were included
+
+11. Privacy & Data Handling
+
+No code is ever uploaded by default
+
+Snippet uploading only after explicit toggle
+
+Tokens stored encrypted locally
+
+Logs exclude content
+
+Providers only receive trimmed context
+
+12. Extensibility
+
+Future additions:
+
+Additional AI providers
+
+Local small models embedded (optional)
+
+Specialized sensor-domain assistant models
+
+Custom user prompt templates
+
+Plugin-like rule extension
+
+13. Summary
+
+SenseDev AI = Two-tier architecture:
+
+✔ Tier 1 — Local, deterministic, always available
+✔ Tier 2 — External, optional, advanced reasoning
+
+Together they create a stable, grounded, modern developer assistant.
+
+This document defines the AI system independently from the rest of the product architecture.

@@ -1,0 +1,411 @@
+SenseDev – Comprehensive System Architecture & Planning Document
+________________________________________
+1. Project Overview
+1.1 Purpose
+SenseDev is a desktop application that performs static analysis on Android codebases (Kotlin/Java) to extract:
+•	Sensor entry points
+•	Data propagation paths
+•	Component dependencies
+•	UI touchpoints
+•	Sensor-related risks
+This information is rendered as:
+•	A navigable graph
+•	A code view
+•	A details/issues panel
+•	An optional dev-to-dev AI assistant
+The goal is faster comprehension, not code generation or mutation.
+1.2 Core Value
+SenseDev reduces:
+•	Cognitive load
+•	Onboarding time
+•	Error discovery time
+•	Architectural confusion
+________________________________________
+2. System Constraints & Boundaries
+2.1 What SenseDev Does NOT Do
+•	No runtime analysis
+•	No execution or profiling
+•	No sensor simulation
+•	No on-device debugging
+•	No build or compilation of the user’s project
+•	No auto-fixing or rewriting code
+•	No uploading code without explicit permission
+2.2 Core Assumption
+All information is derived from:
+•	Static code
+•	Directory structure
+•	Language semantics
+•	Heuristics
+•	Graph relationships
+________________________________________
+3. High-Level System Architecture
+                   ┌──────────────────────┐
+                   │   Desktop UI Layer   │
+                   └──────────┬───────────┘
+                              │
+                              ▼
+                   ┌──────────────────────┐
+                   │  Application Layer   │
+                   │ (Controllers/Flows)  │
+                   └──────────┬───────────┘
+                              │
+                              ▼
+          ┌────────────────────────────────────────┐
+          │     Core Engine (Local Static Analysis) │
+          │ ┌─────────────┬───────────────┬──────┐ │
+          │ │ Project      │ Code Parsing  │ Graph│ │
+          │ │ Indexer      │ & Symbol Map  │ Builder││
+          │ └─────────────┴───────────────┴──────┘ │
+          └────────────────────────────────────────┘
+                              │
+                              ▼
+                   ┌──────────────────────┐
+                   │ Issue Detection Layer│
+                   └──────────────────────┘
+                              │
+                              ▼
+                   ┌──────────────────────┐
+                   │ Local Storage/Cache  │
+                   └──────────────────────┘
+                              │
+                              ▼
+                   ┌──────────────────────┐
+                   │   AI Integration     │
+                   │ (Optional Providers) │
+                   └──────────────────────┘
+________________________________________
+4. Deployment Architecture
+4.1 Platform
+•	Desktop application
+•	OS targets:
+o	Windows 10+
+o	macOS
+o	Linux
+4.2 Isolation
+•	Runs entirely on the user’s machine
+•	No server backend required
+•	AI integration only calls external APIs if explicitly connected
+4.3 Packaging
+Likely options:
+•	JVM-based bundling (Compose Desktop)
+•	Native installer (optional)
+________________________________________
+5. Technology Stack (Tentative)
+Component	Candidate Tech
+UI	Kotlin + Compose Desktop
+Parsing	Kotlin Compiler Embeddable, JavaParser
+Graph	Custom Graph Model + Visualization Library
+Data Storage	Local JSON/SQLite
+Build System	Gradle
+AI Providers	Google AI API (OAuth), OpenAI API (Key-based)
+Rationale:
+•	Kotlin ecosystem fits Android developer familiarity
+•	Compose Desktop provides a modern, reactive UI
+•	JVM allows direct integration with Kotlin parsing tools
+________________________________________
+6. Module Breakdown
+6.1 UI Layer
+Submodules:
+•	Folder Tree Panel
+•	Graph View Panel
+•	Code View Panel
+•	Details/Issues Panel
+•	Q&A Panel
+•	Menu Bar (File, View, Connections, Help)
+•	Status Bar (Analysis progress, connection status)
+Responsibilities:
+•	Render data
+•	Handle user interaction
+•	Subscribe to application state
+•	Forward interaction events to controllers
+________________________________________
+6.2 Application Layer (Controllers)
+Responsible for:
+•	Orchestrating flows between UI and Core Engine
+•	Maintaining UI state
+•	Invoking analysis and graph building
+•	Managing AI query flow
+Controllers:
+1.	ProjectController
+o	Handles project loading
+o	Kicks off static analysis
+o	Maintains project state
+2.	GraphController
+o	Manages graph filtering
+o	Handles node selection
+o	Connects graph with code view
+3.	AIController
+o	Manages AI providers
+o	Builds prompts from graph context
+o	Handles responses and errors
+4.	IssueController
+o	Surfacing issues
+o	Linking issues to nodes and code
+________________________________________
+7. Core Engine Architecture (Static Analysis)
+7.1 Processing Pipeline
+Step 1: Project Indexing
+•	Recursively scan directory
+•	Identify Kotlin/Java files
+•	Extract:
+o	Paths
+o	Packages
+o	Class names
+Output:
+{
+  "files": [...],
+  "modules": [...],
+  "packageMap": {...}
+}
+Step 2: Parsing & Symbol Mapping
+Extract:
+•	Classes
+•	Methods
+•	Fields
+•	Imports
+•	Inheritance relationships
+Build:
+•	Abstract Syntax Trees (AST)
+•	Symbol tables
+Step 3: Sensor Entry Point Detection
+Match patterns:
+•	SensorManager.registerListener
+•	onSensorChanged
+•	LocationCallback
+•	Step/motion APIs
+•	Microphone amplitude
+•	Light/proximity APIs
+Create SensorSourceNode entries.
+Step 4: Call Graph Construction
+Build a graph of:
+•	Method → Method calls
+•	Class → Class references
+•	Field write/read relationships
+Step 5: Data Flow Mapping
+Trace:
+•	Parameter passing
+•	State transformations
+•	LiveData/Flow/StateFlow propagation
+•	UI data consumption
+Step 6: Role Heuristics
+Rules like:
+•	extends ViewModel → VIEWMODEL
+•	@Composable → UI
+•	extends Activity/Fragment → UI
+•	SENSOR API usage → SENSOR_SOURCE
+•	Else → GENERIC
+Step 7: Flow Extraction
+Construct directed paths:
+Sensor Source → Logic → ViewModel → UI
+Store:
+•	Node list
+•	Edge list
+•	Metadata
+________________________________________
+8. Graph Model (Data Structures)
+8.1 Node Structure
+Node {
+  id: UUID
+  name: String
+  type: NodeType   // SENSOR_SOURCE, LOGIC, VIEWMODEL, UI, GENERIC
+  filePath: String
+  methods: [MethodRef]
+  inputs: [NodeRef]
+  outputs: [NodeRef]
+  sensorTypes: [SensorType]
+  metadata: {
+    lifecycle: boolean
+    threadHint: MAIN | BACKGROUND | UNKNOWN
+    stateExposure: [FlowType]
+  }
+}
+8.2 Edge Structure
+Edge {
+  id: UUID
+  from: NodeID
+  to: NodeID
+  type: EdgeType // CALLS, READS_STATE, WRITES_STATE, USES_SENSOR_DATA, LIFECYCLE_LINK
+  sourceLocation: {
+    filePath
+    lineNumber
+  }
+}
+8.3 Flow Structure
+Flow {
+  sensorType: SensorType
+  path: [NodeID]
+  confidence: FLOAT  // For partial graphs
+}
+________________________________________
+9. Issue Detection Architecture
+9.1 Rule Engine
+Pattern-matching across:
+•	Node metadata
+•	Edge types
+•	Flow structures
+•	Code lines (for certain patterns)
+9.2 Issue Object
+Issue {
+  id: UUID
+  type: IssueType
+  severity: LOW | MEDIUM | HIGH
+  description: String
+  nodeRefs: [NodeID]
+  codeRefs: [FilePath:Line]
+  recommendation: String
+}
+9.3 MVP Rules
+•	Unregistered listener
+•	Main-thread heavy logic
+•	Over-sampling
+•	Duplicate listeners
+•	Missing permission checks
+________________________________________
+10. AI Integration Architecture
+10.1 Modes
+•	OFFLINE
+•	PROVIDER_CONNECTED
+10.2 Providers
+Google/Gemini
+•	OAuth-based
+•	Returns API token with model permissions
+OpenAI
+•	User-provided API key
+•	Stored encrypted locally
+10.3 AI Query Pipeline
+1.	Identify current context:
+o	Selected node/file/flow
+2.	Retrieve relevant:
+o	Nodes
+o	Edges
+o	Code snippets
+o	Issues
+3.	Build prompt template:
+4.	You are analyzing a codebase. Facts:
+5.	- Node A calls Node B at X:42
+6.	- Flow: Accelerometer → Repo → VM → UI
+7.	- Issue: Listener not unregistered at Y:88
+8.	User question: "Why is A connected to B?"
+9.	Rules:
+10.	- Only use provided facts
+11.	- If unknown, say so
+12.	- Be concise and technical
+13.	Send to model
+14.	Parse structured response
+15.	Display answer + clickable links
+________________________________________
+11. Local Storage & Caching
+11.1 Cache Contents
+•	Parsed AST/PSI snapshots
+•	Graph data
+•	Flow results
+•	Issues
+•	User preferences
+11.2 Cache Strategy
+•	Stored per-project
+•	Incremental re-analysis (only changed files)
+•	JSON or SQLite-based
+11.3 Security
+•	API tokens encrypted
+•	No cloud sync
+________________________________________
+12. Error Handling & Degraded Modes
+Failure	Behavior
+Parsing failure	Mark file as unsupported, continue
+Reflection/DI	Mark edge uncertain, continue
+AI unavailable	Use offline mode
+Large project	Paginate graph or collapse nodes
+Unsupported language	Ignore file
+System NEVER crashes due to partial info.
+________________________________________
+13. Git & .gitignore Specification
+13.1 Template
+Since GitHub only allows choosing one:
+✅ Select: “Gradle” .gitignore template
+13.2 Manually Add:
+# IntelliJ / JetBrains
+.idea/
+*.iml
+out/
+
+# Logs
+*.log
+
+# Local settings
+*.local
+*.cache
+
+# API keys / secrets
+.env
+*.env
+*.keys
+apikeys.json
+tokens.json
+
+# Optional Compose Desktop caches
+compose-cache/
+13.3 Must Not Commit:
+•	Build outputs
+•	IDE configs
+•	Logs
+•	Secrets
+•	Caches
+13.4 Should Commit:
+•	Source
+•	Gradle scripts
+•	UI assets
+•	Documentation
+________________________________________
+14. Performance Considerations
+14.1 Graph Scale
+•	Up to 10,000 nodes feasible
+•	Collapsing/grouping required beyond 2,000 nodes
+14.2 Analysis Time Targets
+•	Small project: < 3s
+•	Medium project: < 10s
+•	Large project: partial on-demand analysis
+14.3 Memory Strategy
+•	Lazy-loading nodes
+•	On-demand code loading
+•	Cached graph
+________________________________________
+15. Extensibility Architecture
+Future extension points:
+•	Custom rule plugins
+•	Additional languages (KMP shared code)
+•	Export flows as JSON or images
+•	Version-to-version diff of flows
+Architectural requirement:
+•	Core engine must remain modular and stateless.
+________________________________________
+16. Security & Privacy
+•	No code leaves machine unless explicitly sent to AI
+•	Clear disclosure when sending snippets
+•	Tokens stored encrypted and locally
+•	No telemetry unless user opts in
+________________________________________
+17. Phase Plan
+Phase 1 — Foundations
+•	UI shell
+•	Project loader
+•	Basic parsing
+•	Graph placeholder
+•	Q&A stub
+Phase 2 — Real Engine
+•	Full parsing
+•	Graph builder
+•	Issue detector
+•	Flow extraction
+•	Graph UI integration
+Phase 3 — AI Integration
+•	Connections menu
+•	OAuth/key storage
+•	Prompt builder
+•	Context-based Q&A
+Phase 4 — UX Polish
+•	Filtering
+•	Collapsible nodes
+•	Hover tooltips
+•	Exporting
+•	User annotations
+
