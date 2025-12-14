@@ -15,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -43,6 +44,7 @@ fun App(appState: AppState, projectController: ProjectController) {
     var showSaveAsDialog by remember { mutableStateOf(false) }
     var showLoadDialog by remember { mutableStateOf(false) }
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
     var selectedNodeId by remember { mutableStateOf<String?>(null) }
     val analysisCache = remember { AnalysisCache() }
     val coroutineScope = rememberCoroutineScope()
@@ -82,6 +84,9 @@ fun App(appState: AppState, projectController: ProjectController) {
                     onSettings = {
                         showSettingsDialog = true
                     },
+                    onAbout = {
+                        showAboutDialog = true
+                    },
                     onExit = {
                         exitProcess(0)
                     },
@@ -90,7 +95,16 @@ fun App(appState: AppState, projectController: ProjectController) {
             }
             
             // Main Content Area with Resizable Panes
-            Row(modifier = Modifier.fillMaxSize()) {
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                // Ensure layout has at least 800dp width (safe for Sidebar ~250dp + Details ~300dp + Content)
+                val minSafeWidth = 800.dp
+                val rowModifier = if (maxWidth < minSafeWidth) {
+                    Modifier.width(minSafeWidth).fillMaxHeight().horizontalScroll(rememberScrollState())
+                } else {
+                    Modifier.fillMaxSize()
+                }
+
+                Row(modifier = rowModifier) {
                 // Resizable Sidebar
                 var sidebarWidth by remember { mutableStateOf(250.dp) }
                 
@@ -589,6 +603,7 @@ fun App(appState: AppState, projectController: ProjectController) {
                     } // End Box content
                 } // End Right Panel Column
             }
+            }
         }
     }
 
@@ -675,6 +690,15 @@ fun App(appState: AppState, projectController: ProjectController) {
             },
             onSettingsChanged = {
                 aiSettingsVersion++
+            }
+        )
+    }
+
+    // About Dialog
+    if (showAboutDialog) {
+        ui.components.AboutWindow(
+            onDismiss = {
+                showAboutDialog = false
             }
         )
     }

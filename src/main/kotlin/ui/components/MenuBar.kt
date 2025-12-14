@@ -20,6 +20,7 @@ fun MenuBar(
     onSaveAnalysisAs: () -> Unit,
     onLoadAnalysis: () -> Unit,
     onSettings: () -> Unit,
+    onAbout: () -> Unit,
     onExit: () -> Unit,
     settingsVersion: Int = 0,
     enabled: Boolean = true
@@ -142,7 +143,10 @@ fun MenuBar(
                 onDismissRequest = { helpMenuExpanded = false },
                 modifier = Modifier.background(PanelBackground)
             ) {
-                DropdownMenuItem(onClick = { helpMenuExpanded = false }) {
+                DropdownMenuItem(onClick = { 
+                    onAbout()
+                    helpMenuExpanded = false 
+                }) {
                     Text("About SenseDev", color = TextPrimary)
                 }
                 DropdownMenuItem(onClick = { helpMenuExpanded = false }) {

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.sensedev"
-version = "1.0-SNAPSHOT"
+version = "0.1.0"
 
 repositories {
     mavenCentral()
@@ -43,9 +43,19 @@ compose.desktop {
     application {
         mainClass = "MainKt"
         nativeDistributions {
-            targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb)
+            // targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe)
             packageName = "SenseDev"
-            packageVersion = "1.0.0"
+            packageVersion = "0.1.0"
+            description = "SenseDev AI-Assisted Code Analysis"
+            vendor = "SenseDev"
+            
+            windows {
+                iconFile.set(project.file("src/main/resources/SenseDev_icon.ico"))
+                // Ensure console is hidden for production build, or keep it true for debug preview?
+                // Plan says "Developer Preview quality", so maybe console is okay, but goal is "double-clickable .exe".
+                // Usually users don't want console.
+                console = false
+            }
         }
     }
 }

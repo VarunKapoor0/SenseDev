@@ -1,0 +1,297 @@
+SenseDev — About Window
+
+Planning, Design, and Architecture Document
+
+1. Purpose of the About Window
+
+The About SenseDev window serves three concrete goals:
+
+Legitimacy
+
+Confirms SenseDev is a real, versioned desktop product
+
+Orientation
+
+Explains what SenseDev is in one sentence
+
+Traceability
+
+Provides version + source reference (GitHub)
+
+It is not a marketing page, changelog, or documentation entry point.
+
+2. Scope (Strict)
+In Scope
+
+One modal / dialog window
+
+Opened from Help → About SenseDev
+
+Read-only informational UI
+
+Desktop only
+
+Explicitly Out of Scope
+
+License text
+
+Third-party credits
+
+Update checks
+
+Telemetry
+
+Dynamic content
+
+Navigation to other app views
+
+This window must be stable for months without change.
+
+3. UX Design Principles (Important)
+
+The About window must:
+
+Be small and calm
+
+Avoid scrollbars
+
+Avoid heavy branding
+
+Match a developer-tool aesthetic
+
+Feel native, not web-like
+
+Tone
+
+Serious
+
+Minimal
+
+Informational
+
+No hype language
+
+4. Visual Layout (Conceptual)
+Window Characteristics
+
+Type: Modal dialog (preferred) or fixed-size window
+
+Resizable: ❌ No
+
+Always on top of main window: ✅ Yes
+
+Close methods:
+
+“Close” button
+
+ESC key
+
+Window close (X)
+
+Vertical Layout Structure
+┌─────────────────────────────┐
+│  [ SenseDev Icon ]          │
+│                             │
+│  SenseDev                   │
+│  Version 0.1.0-dev           │
+│                             │
+│  Visual codebase exploration │
+│  and understanding tool for │
+│  developers.                 │
+│                             │
+│  ─────────────────────────  │
+│                             │
+│  Author: Varun Kapoor        │
+│  Platform: Windows           │
+│                             │
+│  GitHub: github.com/...      │
+│                             │
+│              [ Close ]       │
+└─────────────────────────────┘
+
+5. Content Specification (Exact)
+Mandatory Fields (v0.1)
+Field	Value
+App Name	SenseDev
+Version	0.1.0-dev
+Descriptor	“Developer Preview”
+Description	“Visual codebase exploration and understanding tool for developers.”
+Author	Your name
+Platform	Windows
+Link	GitHub repository
+
+No emojis. No slogans.
+
+Optional (Allowed, but not required)
+
+Build date
+
+Short disclaimer (“Early preview; features may change”)
+
+6. Icon Usage
+
+Use the same icon as the application icon
+
+Size in About window:
+
+64×64 or 96×96
+
+No animation
+
+No glow or effects
+
+Purpose: identity confirmation, not decoration.
+
+7. Interaction Model
+User Actions
+
+Click Close
+
+Press ESC
+
+Click window close (X)
+
+No Other Interactions
+
+No hyperlinks opening inside the app
+
+External links open via OS browser only
+
+8. Architectural Design
+Component Responsibility
+AboutWindow (UI Layer)
+
+Stateless UI
+
+Receives data as parameters
+
+No business logic
+
+No filesystem access
+
+AboutInfo (Data Model)
+
+A simple immutable structure containing:
+
+appName
+
+version
+
+description
+
+author
+
+platform
+
+repoUrl
+
+This prevents:
+
+Hard-coding text across UI
+
+Future duplication
+
+Data Source Strategy
+
+For v0.1:
+
+Version string is defined once
+
+Passed into:
+
+Main app
+
+About window
+
+Do not parse version from the executable or filesystem.
+
+9. Lifecycle & Ownership
+
+Window is created on demand
+
+Destroyed on close
+
+No retained state
+
+No background threads
+
+This guarantees:
+
+Zero memory leaks
+
+Zero side effects
+
+10. Accessibility & Usability (Minimal but correct)
+
+Text must be selectable
+
+Buttons reachable via keyboard
+
+Tab order:
+
+Content → Close button
+
+No need for screen-reader optimization at this stage.
+
+11. Error Handling
+
+There should be no failure states.
+
+If:
+
+Version missing → display “unknown”
+
+Link missing → hide link section
+
+The About window must never crash the app.
+
+12. Testing Checklist (Before Shipping)
+
+You must verify:
+
+ Opens from Help → About SenseDev
+
+ Window size is appropriate on 100% & 150% DPI
+
+ ESC closes the window
+
+ Close button works
+
+ Icon renders correctly
+
+ Text does not wrap awkwardly
+
+ External link opens browser
+
+Test using the packaged .exe, not Gradle run.
+
+13. Future-Proofing (Without Implementing)
+
+This design allows future additions without refactor:
+
+License tab
+
+Credits tab
+
+Update channel info
+
+But do not implement these now.
+
+14. Stop Condition
+
+You stop working on the About window when:
+
+It opens reliably
+
+Content is accurate
+
+It feels boring and professional
+
+That means it’s done.
+
+Final Directive
+
+The About SenseDev window is not a design playground.
+It is a product stamp.
+
+Implement it once, correctly, and move on.

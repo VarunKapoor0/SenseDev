@@ -372,9 +372,11 @@ fun GraphPanel(
                         fontWeight = FontWeight.SemiBold, 
                         color = Color(0xFFECECEC).copy(alpha = alpha)
                     ),
-                    topLeft = actualPos - Offset(nodeWidth / 2 - 16f, nodeHeight / 2 - 20f)
+                    topLeft = actualPos - Offset(nodeWidth / 2 - 16f, nodeHeight / 2 - 20f),
+                    softWrap = false
                 )
                 
+                // Subtitle (Generic or File info)
                 // Subtitle (Generic or File info)
                 drawText(
                     textMeasurer,
@@ -383,7 +385,8 @@ fun GraphPanel(
                         fontSize = 11.sp, 
                         color = Color(0xFFA7A7A7).copy(alpha = alpha)
                     ),
-                    topLeft = actualPos - Offset(nodeWidth / 2 - 16f, nodeHeight / 2 - 40f)
+                    topLeft = actualPos - Offset(nodeWidth / 2 - 16f, nodeHeight / 2 - 40f),
+                    softWrap = false
                 )
             }
         }

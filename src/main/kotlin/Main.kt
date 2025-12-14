@@ -15,6 +15,7 @@ fun main() = application {
         title = "SenseDev",
         state = rememberWindowState(width = 1280.dp, height = 800.dp)
     ) {
+        window.minimumSize = java.awt.Dimension(800, 600)
         App(appState, projectController)
     }
 }

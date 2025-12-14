@@ -1,0 +1,327 @@
+SenseDev Windows Distribution Planning Document
+
+Goal: Produce a double-clickable Windows .exe for SenseDev (v0.1.0-dev) that runs on a clean Windows machine without Java or command-line usage.
+
+1. Scope & Success Criteria
+In Scope
+
+Windows desktop distribution only
+
+Single executable (.exe)
+
+JVM bundled
+
+Manual distribution via GitHub Releases
+
+Developer Preview quality (not signed, not auto-updating)
+
+Out of Scope (explicitly)
+
+macOS / Linux builds
+
+Auto-updates
+
+Installers with registry changes
+
+Code signing
+
+Telemetry / crash reporting
+
+Definition of “Done”
+
+.exe launches via double-click
+
+Runs on a machine without Java installed
+
+No .bat, Gradle, or terminal required
+
+App window opens reliably
+
+File system access works as expected
+
+App can be zipped and shared
+
+2. Current State (Baseline)
+
+SenseDev is a Compose Multiplatform (Desktop JVM) app
+
+App is currently launched via:
+
+Gradle task
+
+.bat wrapper
+
+Build environment: Windows
+
+No existing distribution artifacts
+
+This implies:
+
+JVM dependency currently implicit
+
+No app metadata finalized (name, version, icon)
+
+3. Chosen Distribution Strategy
+Strategy
+
+Compose Multiplatform Desktop → Native Windows distribution
+
+Why this strategy
+
+Officially supported
+
+Bundles JVM
+
+Produces native Windows artifacts
+
+Lowest risk / highest credibility
+
+Artifact Type
+
+Primary: .exe
+
+(Optional secondary: .msi, only if trivial)
+
+For v0.1, .exe is sufficient and preferred.
+
+4. Versioning & Identity (must be decided before build)
+App Identity
+
+App name: SenseDev
+
+Display name: SenseDev
+
+Internal ID: sensedev (or existing package name)
+
+Versioning
+
+Version: 0.1.0-dev
+
+This version must appear in:
+
+Build config
+
+About window (later)
+
+GitHub release tag
+
+Do not use floating versions like “latest”.
+
+5. Build Configuration Planning
+JVM Target
+
+Java 17 (LTS)
+
+JVM must be bundled in the distribution
+
+Architecture
+
+x64 Windows
+
+(ARM64 explicitly out of scope)
+
+Packaging Mode
+
+Release mode
+
+Debug symbols not required
+
+Optimizations enabled where supported
+
+6. Distribution Output Layout (Expected)
+
+After a successful build, you should have:
+
+SenseDev-0.1.0-dev/
+├── SenseDev.exe
+├── runtime/        (bundled JVM)
+├── app/            (compiled app)
+├── resources/
+└── SenseDev.ico
+
+
+Or a single self-contained .exe depending on configuration.
+
+You should verify:
+
+The .exe runs if copied elsewhere
+
+The folder can be zipped and redistributed
+
+7. App Metadata Requirements
+
+These must be finalized before building:
+
+Required
+
+App name
+
+Version
+
+Vendor / author (your name or “SenseDev”)
+
+Description (1 line)
+
+Window title
+
+Icons
+
+Windows .ico
+
+Minimum:
+
+256×256
+
+128×128
+
+64×64
+
+Used for:
+
+Window
+
+Taskbar
+
+File Explorer
+
+Placeholder icons are acceptable for v0.1, but not defaults.
+
+8. File System & Runtime Considerations (Critical)
+Working Directory
+
+Once packaged:
+
+App will not run from project root
+
+Relative paths may break
+
+You must:
+
+Audit any file access
+
+Use:
+
+User-selected paths
+
+App-specific data directory
+
+Absolute paths
+
+Common Failure Points
+
+Assuming cwd is project root
+
+Hardcoded paths
+
+Writing files next to .exe (may fail)
+
+This step often reveals real bugs.
+
+9. Windowing & Stability Checks
+
+Before shipping the .exe, verify:
+
+Required Checks
+
+App launches at reasonable default size
+
+App does not crash on:
+
+First launch
+
+Window resize
+
+Minimize / restore
+
+App closes cleanly
+
+Your known resize crash must be addressed or explicitly documented.
+
+10. Build Validation Checklist (Mandatory)
+
+You must test the .exe under these conditions:
+
+Clean Machine Test (or equivalent)
+
+No Java installed
+
+No Gradle
+
+No project files present
+
+Validation Steps
+
+Double-click .exe
+
+App opens
+
+Core UI visible
+
+Load a sample codebase
+
+Exit app cleanly
+
+If this fails, do not ship.
+
+11. Naming & Output Conventions
+File Name
+SenseDev-0.1.0-dev-windows.exe
+
+
+Avoid:
+
+app.exe
+
+desktop.exe
+
+sensedev-final.exe
+
+Folder Naming
+
+Consistent with version and platform.
+
+12. Known Limitations (to accept for v0.1)
+
+These are acceptable and should be documented later:
+
+Unsigned executable (Windows SmartScreen warning)
+
+No auto-update
+
+Windows-only
+
+Developer Preview stability
+
+Do not attempt to fix these now.
+
+13. Post-Build Immediate Next Steps (not executed yet)
+
+After .exe exists and runs:
+
+Add About SenseDev window
+
+Write installation documentation based on actual behavior
+
+Create GitHub Release
+
+These are explicitly downstream of this plan.
+
+14. Stop Conditions (important)
+
+You stop working on packaging when:
+
+.exe launches reliably
+
+You can share it via zip
+
+You are confident it represents SenseDev honestly
+
+Do not polish beyond this point yet.
+
+Final Directive
+
+Your only goal right now is:
+
+Produce a working Windows .exe that runs without Java or the command line.
+
+Everything else is secondary.
