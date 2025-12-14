@@ -43,7 +43,7 @@ compose.desktop {
     application {
         mainClass = "MainKt"
         nativeDistributions {
-            // targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe)
+            targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe)
             packageName = "SenseDev"
             packageVersion = "0.1.0"
             description = "SenseDev AI-Assisted Code Analysis"
